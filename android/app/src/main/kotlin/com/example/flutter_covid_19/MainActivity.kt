@@ -1,4 +1,4 @@
-package com.example.flutter_covid_19
+package com.agung.covid_19_statistics
 
 import androidx.annotation.NonNull;
 import io.flutter.embedding.android.FlutterActivity
