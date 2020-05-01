@@ -2,10 +2,13 @@ import 'dart:convert';
 
 import 'package:chopper/chopper.dart';
 import 'package:flutter/material.dart';
-import 'package:getflutter/getflutter.dart';
+import 'package:getflutter/components/avatar/gf_avatar.dart';
+import 'package:getflutter/components/list_tile/gf_list_tile.dart';
+import 'package:getflutter/shape/gf_avatar_shape.dart';
 import 'package:provider/provider.dart';
 
 import '../data/country_api_service.dart';
+import 'country_page.dart';
 
 class CountriesPage extends StatelessWidget {
   @override
@@ -44,22 +47,35 @@ class CountriesPage extends StatelessWidget {
     // String countryName = country['country'].length > 16
     //     ? country['country'].substring(0, 15) + '...'
     //     : country['country'];
-    // CountryApiService countryApiService =
-    //     Provider.of<CountryApiService>(context);
+    CountryApiService countryApiService =
+        Provider.of<CountryApiService>(context);
 
-    return GFListTile(
-      title: Text(country['country']),
-      color: Color(0xFF0a0e21),
-      margin: EdgeInsets.all(2),
-      padding: EdgeInsets.all(6),
-      subTitle: Text(
-        '${country['cases']} cases',
-        style: TextStyle(color: Colors.white70),
+    return GestureDetector(
+      child: GFListTile(
+        title: Text(country['country']),
+        color: Color(0xFF0a0e21),
+        margin: EdgeInsets.all(2),
+        padding: EdgeInsets.all(6),
+        subTitle: Text(
+          '${country['cases']} cases',
+          style: TextStyle(color: Colors.white70),
+        ),
+        avatar: GFAvatar(
+          backgroundImage: NetworkImage('${country['countryInfo']['flag']}'),
+          shape: GFAvatarShape.standard,
+        ),
       ),
-      avatar: GFAvatar(
-        backgroundImage: NetworkImage('${country['countryInfo']['flag']}'),
-        shape: GFAvatarShape.standard,
-      ),
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => Provider(
+              create: (context) => countryApiService,
+              child: CountryPage(country: country),
+            ),
+          ),
+        );
+      },
     );
   }
 }

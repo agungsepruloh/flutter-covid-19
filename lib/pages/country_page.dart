@@ -1,6 +1,9 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:getflutter/colors/gf_color.dart';
+import 'package:getflutter/components/card/gf_card.dart';
+import 'package:getflutter/components/carousel/gf_items_carousel.dart';
 import 'package:provider/provider.dart';
 
 import '../data/country_api_service.dart';
@@ -17,57 +20,72 @@ class CountryPage extends StatelessWidget {
             .getCountry(country['country']),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
+            if (snapshot.hasError)
+              return _buildError(snapshot.error.toString());
+
             final Map<String, dynamic> country =
                 json.decode(snapshot.data.bodyString);
             return _buildBody(context, country);
-          } else {
-            return Center(
-              child: CircularProgressIndicator(),
-            );
           }
+          return _buildLoader();
         },
       ),
     );
   }
 
+  Widget _buildLoader() => Center(child: CircularProgressIndicator());
+
+  Widget _buildError(String message) => Center(child: Text(message));
+
   _buildBody(BuildContext context, Map<String, dynamic> country) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
+    double screenHeight = MediaQuery.of(context).size.height;
+
+    return Stack(
       children: <Widget>[
-        Text(
-          country['country'],
-          style: TextStyle(fontSize: 30),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(right: 8, left: 20, top: 20),
-          child: Row(
-            children: <Widget>[
-              Image.asset(
-                'assets/images/doctor-woman-400px.png',
-                height: MediaQuery.of(context).size.height / 2,
-                scale: 0.1,
+        Image.asset('assets/images/line-background.jpg'),
+        Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Padding(
+              padding: const EdgeInsets.all(10),
+              child: Text(
+                country['country'],
+                style: TextStyle(fontSize: 40),
               ),
-              Spacer(),
-              Expanded(
-                child: Column(
-                  children: <Widget>[
-                    CoronaCase(
-                      state: 'Cases',
-                      total: country['cases'],
-                    ),
-                    CoronaCase(
-                      state: 'Recovered',
-                      total: country['recovered'],
-                    ),
-                    CoronaCase(
-                      state: 'Deaths',
-                      total: country['deaths'],
-                    ),
-                  ],
+            ),
+            Center(
+              child: Image.asset(
+                'assets/images/medical-research.png',
+                fit: BoxFit.fitWidth,
+              ),
+            ),
+            GFItemsCarousel(
+              itemHeight: screenHeight / 6,
+              rowCount: 3,
+              children: <Widget>[
+                CoronaCase(
+                  title: 'Cases',
+                  data: country['cases'],
                 ),
-              )
-            ],
-          ),
+                CoronaCase(
+                  title: 'Recovered',
+                  data: country['recovered'],
+                ),
+                CoronaCase(
+                  title: 'Deaths',
+                  data: country['deaths'],
+                ),
+                CoronaCase(
+                  title: 'Critical',
+                  data: country['critical'],
+                ),
+                CoronaCase(
+                  title: 'Active',
+                  data: country['active'],
+                ),
+              ],
+            ),
+          ],
         ),
       ],
     );
@@ -75,27 +93,48 @@ class CountryPage extends StatelessWidget {
 }
 
 class CoronaCase extends StatelessWidget {
-  final String state;
-  final int total;
-  CoronaCase({this.state, this.total});
+  final String title;
+  final int data;
+  CoronaCase({this.title, this.data});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.only(top: 10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: <Widget>[
-          Text(
-            state,
-            style: TextStyle(fontSize: 18),
-          ),
-          Text(
-            '$total',
-            style: TextStyle(color: Colors.white70),
-          ),
-          Divider(color: Colors.white),
+    double screenHeight = MediaQuery.of(context).size.height;
+
+    return GFCard(
+      margin: const EdgeInsets.only(left: 10, right: 10, top: 10),
+      borderRadius: const BorderRadius.all(Radius.circular(4)),
+      gradient: LinearGradient(
+        begin: FractionalOffset.topLeft,
+        end: FractionalOffset.bottomRight,
+        colors: [
+          const Color(0xFF0175C2),
+          const Color(0xFF0a0e21),
         ],
+      ),
+      content: Center(
+        heightFactor: screenHeight / 400,
+        child: Column(
+          children: <Widget>[
+            Text(
+              title,
+              style: TextStyle(
+                color: GFColors.WHITE,
+              ),
+            ),
+            Text(
+              '${data.toString()} people',
+              style: TextStyle(
+                fontSize: 10,
+                color: GFColors.LIGHT,
+              ),
+            ),
+            Icon(
+              Icons.show_chart,
+              color: GFColors.LIGHT,
+            ),
+          ],
+        ),
       ),
     );
   }
