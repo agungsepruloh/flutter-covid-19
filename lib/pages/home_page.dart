@@ -7,38 +7,39 @@ import 'package:pie_chart/pie_chart.dart';
 import 'package:provider/provider.dart';
 
 import '../data/all_api_service.dart';
+import '../data/country_api_service.dart';
+import 'countries_page.dart';
 
 class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        title: Text('COVID-19'),
-      ),
       body: FutureBuilder<Response>(
         future: Provider.of<AllApiService>(context).getAll(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
+            if (snapshot.hasError)
+              return _buildError(snapshot.error.toString());
             final data = json.decode(snapshot.data.bodyString);
             return _buildBody(context, data);
-          } else {
-            return Center(
-              child: CircularProgressIndicator(),
-            );
           }
+          return _buildLoader();
         },
       ),
     );
   }
 
+  Widget _buildLoader() => Center(child: CircularProgressIndicator());
+
+  Widget _buildError(String message) => Center(child: Text(message));
+
   Widget _buildBody(BuildContext context, Map<String, dynamic> data) {
     Map<String, double> dataMap = Map();
-    // dataMap.putIfAbsent("Total Cases", () => data['cases'].toDouble());
     dataMap.putIfAbsent("Total Deaths", () => data['deaths'].toDouble());
     dataMap.putIfAbsent("Active Cases", () => data['active'].toDouble());
-    // dataMap.putIfAbsent("Critical", () => data['critical'].toDouble());
     dataMap.putIfAbsent("Total Recovered", () => data['recovered'].toDouble());
+    // dataMap.putIfAbsent("Total Cases", () => data['cases'].toDouble());
+    // dataMap.putIfAbsent("Critical", () => data['critical'].toDouble());
 
     List<Color> colorList = [
       Color(0xFFf1c40f), // Yellow
@@ -55,6 +56,7 @@ class HomePage extends StatelessWidget {
       children: <Widget>[
         Expanded(
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               Center(
                 child: Text(
@@ -111,7 +113,7 @@ class HomePage extends StatelessWidget {
             height: 50,
             child: Center(
               child: Text(
-                'View By Countries',
+                'View Affected Countries',
                 style: TextStyle(
                   fontWeight: FontWeight.w500,
                   fontSize: 18,
@@ -120,10 +122,15 @@ class HomePage extends StatelessWidget {
             ),
           ),
           onTap: () {
-            Navigator.pushReplacement(
+            Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => HomePage(),
+                builder: (context) => Provider(
+                  create: (context) => CountryApiService.create(),
+                  dispose: (context, CountryApiService service) =>
+                      service.client.dispose(),
+                  child: CountriesPage(),
+                ),
               ),
             );
           },
